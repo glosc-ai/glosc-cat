@@ -82,6 +82,9 @@
 - 项目协作说明：AGENTS.md
 - 产品需求文档：docs/product-requirements.md
 
+## App Store 介绍文案
+说猫语是一款为养猫用户打造的温柔互动应用，帮你把猫咪的叫声翻译成更容易理解的情绪与需求，也能把你想说的话转换成更贴近猫咪交流方式的声音互动。无论它是在撒娇、催饭、求关注，还是你只是想用更可爱的方式回应它，这里都能给你一份轻松、治愈、带点陪伴感的沟通体验。打开应用，录一段猫叫，或输入一句想对它说的话，让每一次日常互动都更懂彼此一点。
+
 ## 本地验证
 - 构建与测试命令：xcodebuild test -scheme glosc-cat -project glosc-cat.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 17'
 
