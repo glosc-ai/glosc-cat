@@ -47,8 +47,8 @@ struct glosc_catTests {
         #expect(plan.tone == .call)
         #expect(plan.catText.contains("喵"))
         #expect(plan.explanation.contains("温柔地叫它过来"))
-        #expect(plan.sampleTitle == "想吃东西")
-        #expect(plan.sampleIntent == "饭点提醒")
+        #expect(plan.sampleTitle == "来吃饭啦")
+        #expect(plan.sampleIntent == "开饭提醒")
     }
 
     @Test func builtInSamplesCoverTonePreview() async throws {
@@ -66,7 +66,7 @@ struct glosc_catTests {
         let playSample = CatAudioSample.bestMatch(for: "快来陪我玩一会儿", tone: .play)
         let foodSample = CatAudioSample.bestMatch(for: "来吃饭啦", tone: .call)
 
-        #expect(playSample.id == "impatient_outside")
-        #expect(foodSample.id == "food_request")
+        #expect(playSample.id == "play_together")
+        #expect(foodSample.id == "meal_time")
     }
 }

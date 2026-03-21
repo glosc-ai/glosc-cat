@@ -20,7 +20,20 @@ struct CatAudioSample: Identifiable, Equatable {
     let keywords: [String]
 
     var bundleURL: URL? {
-        Bundle.main.url(forResource: fileName, withExtension: fileExtension, subdirectory: "CatAudio")
+        let candidateSubdirectories: [String?] = [
+            "CatAudio",
+            "Resources/CatAudio",
+            "Resources",
+            nil
+        ]
+
+        for subdirectory in candidateSubdirectories {
+            if let url = Bundle.main.url(forResource: fileName, withExtension: fileExtension, subdirectory: subdirectory) {
+                return url
+            }
+        }
+
+        return nil
     }
 
     var fullFileName: String {
@@ -33,64 +46,88 @@ struct CatAudioSample: Identifiable, Equatable {
 
     static let builtIn: [CatAudioSample] = [
         CatAudioSample(
-            id: "food_request",
-            title: "想吃东西",
-            intent: "饭点提醒",
-            detail: "母英国短毛猫想要食物，适合演示偏明确的需求表达。",
-            fileName: "food_request_british_shorthair",
+            id: "like_you",
+            title: "喜欢你",
+            intent: "亲近安抚",
+            detail: "呼噜声更柔软，适合贴贴、安抚和表达喜欢时使用。",
+            fileName: "clean_purr_whiskers",
             fileExtension: "mp3",
-            attribution: "Wikimedia Commons: Weibliche Britisch Kurzhaar will Futter C1277 MIAUEN.wav",
-            license: "CC BY 4.0",
-            recommendedTone: .call,
-            keywords: ["吃", "饭", "饿", "零食", "开饭", "喝水"]
-        ),
-        CatAudioSample(
-            id: "pleading_outside",
-            title: "请求出门",
-            intent: "想出去看看",
-            detail: "节奏更主动，适合演示急切但不算攻击性的提醒型猫叫。",
-            fileName: "pleading_to_go_out",
-            fileExtension: "mp3",
-            attribution: "Wikimedia Commons: Meow of a pleading cat.oga",
+            attribution: "Wikimedia Commons: Whiskers' purr edit.ogg",
             license: "Public Domain",
-            recommendedTone: .call,
-            keywords: ["来", "过来", "回家", "门", "出去", "跟我走"]
+            recommendedTone: .soothe,
+            keywords: ["喜欢", "爱你", "贴贴", "抱抱", "亲亲", "我在这", "陪你", "别怕"]
         ),
         CatAudioSample(
-            id: "impatient_outside",
-            title: "出门前不耐烦",
-            intent: "等不及了",
-            detail: "更像已经知道要出门时的催促，适合演示不耐烦和催促感。",
-            fileName: "impatient_to_go_out",
+            id: "meal_time",
+            title: "来吃饭啦",
+            intent: "开饭提醒",
+            detail: "短促、明确，适合把饭点信号传递得更清楚。",
+            fileName: "hungry_meow_mixkit",
             fileExtension: "mp3",
-            attribution: "Wikimedia Commons: GettingOutImpatient.ogg",
-            license: "Public Domain",
-            recommendedTone: .play,
-            keywords: ["快点", "陪玩", "玩", "起来", "出门", "马上"]
+            attribution: "Mixkit: Domestic cat hungry meow",
+            license: "Mixkit License",
+            recommendedTone: .call,
+            keywords: ["吃饭", "开饭", "吃", "饭饭", "吃东西", "来吃", "吃罐头", "吃零食"]
         ),
         CatAudioSample(
-            id: "siamese_meow",
-            title: "暹罗猫叫",
-            intent: "高辨识度喵叫",
-            detail: "音色更尖一点，适合做更典型的猫叫试听示例。",
-            fileName: "siamese_meow",
-            fileExtension: "wav",
-            attribution: "Wikimedia Commons: Meow of a Siamese cat - freemaster2.wav",
-            license: "CC0",
+            id: "great_job",
+            title: "真棒呀",
+            intent: "夸奖鼓励",
+            detail: "清晰又亲近，适合夸它好乖、做得真棒的时候播放。",
+            fileName: "clean_meow_mixkit",
+            fileExtension: "mp3",
+            attribution: "Mixkit: Sweet kitty meow",
+            license: "Mixkit License",
             recommendedTone: .praise,
-            keywords: ["乖", "真棒", "好棒", "喜欢你", "夸", "抱抱", "亲亲"]
+            keywords: ["真棒", "好棒", "真乖", "好乖", "棒棒", "夸夸", "奖励"]
         ),
         CatAudioSample(
-            id: "heat_call",
-            title: "持续呼叫",
-            intent: "持续高存在感",
-            detail: "连续感更强，适合展示更长、更抓人的猫叫节奏。",
-            fileName: "in_heat_call",
+            id: "play_together",
+            title: "来玩呀",
+            intent: "陪玩邀请",
+            detail: "更活泼一点，适合逗猫棒、追逐和互动前的邀请感。",
+            fileName: "begging_meow_mixkit",
             fileExtension: "mp3",
-            attribution: "Wikimedia Commons: Audio file of cat meowing.ogg",
-            license: "CC BY-SA 4.0",
+            attribution: "Mixkit: Cartoon kitty begging meow",
+            license: "Mixkit License",
             recommendedTone: .play,
-            keywords: ["注意", "听我说", "互动", "兴奋", "回应", "看我"]
+            keywords: ["玩", "玩耍", "陪玩", "一起玩", "逗猫棒", "球球", "追追", "玩吧"]
+        ),
+        CatAudioSample(
+            id: "hungry_now",
+            title: "我饿啦",
+            intent: "催饭表达",
+            detail: "更像带一点委屈的提醒，适合表达肚子空了、想马上被注意到。",
+            fileName: "distressed_meow_mixkit",
+            fileExtension: "mp3",
+            attribution: "Mixkit: Little cat pain meow",
+            license: "Mixkit License",
+            recommendedTone: .call,
+            keywords: ["饿", "好饿", "肚子饿", "想吃", "给我吃", "快开饭", "饿了"]
+        ),
+        CatAudioSample(
+            id: "come_here",
+            title: "过来呀",
+            intent: "召唤靠近",
+            detail: "清晰、短促，适合叫它靠近你、回头看你，或从别处过来。",
+            fileName: "attention_meow_mixkit",
+            fileExtension: "mp3",
+            attribution: "Mixkit: Little cat attention meow",
+            license: "Mixkit License",
+            recommendedTone: .call,
+            keywords: ["过来", "来这里", "来这儿", "回来", "靠近", "来呀", "跟我来"]
+        ),
+        CatAudioSample(
+            id: "go_away",
+            title: "走开啦",
+            intent: "边界提醒",
+            detail: "嘶声更像在表达别靠太近，适合作为明显的拒绝或边界信号。",
+            fileName: "go_away_hiss",
+            fileExtension: "mp3",
+            attribution: "Wikimedia Commons: Cat hissing - Zabuhailo.wav",
+            license: "CC0",
+            recommendedTone: nil,
+            keywords: ["走开", "别过来", "不要", "不行", "住手", "离开", "别碰", "别闹"]
         )
     ]
 
@@ -117,11 +154,15 @@ struct CatAudioSample: Identifiable, Equatable {
             total += 6
         }
 
-        if tone == .soothe && sample.id == "siamese_meow" {
-            total += 2
+        if tone == .soothe && sample.id == "like_you" {
+            total += 3
         }
 
-        if tone == .play && sample.id == "impatient_outside" {
+        if tone == .praise && sample.id == "great_job" {
+            total += 3
+        }
+
+        if tone == .play && sample.id == "play_together" {
             total += 3
         }
 

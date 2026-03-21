@@ -34,8 +34,8 @@ struct ContentView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 22) {
-                        heroSection
                         modeSelector
+                        activePanel
 
                         if let errorMessage {
                             MessageBanner(
@@ -51,7 +51,7 @@ struct ContentView: View {
                             accent: AppPalette.sage
                         )
 
-                        activePanel
+                        heroSection
                         recentRecordsSection
 
                         if !favoritePhrases.isEmpty {
@@ -61,7 +61,8 @@ struct ContentView: View {
                         gentleTipsSection
                     }
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 24)
+                    .padding(.top, 18)
+                    .padding(.bottom, 24)
                 }
             }
             .navigationBarHidden(true)
