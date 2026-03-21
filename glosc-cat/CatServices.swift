@@ -11,6 +11,8 @@ import Foundation
 import Speech
 
 enum CatAudioAnalyzer {
+    private static var cachedReferenceSignatures: [String: CatAudioSignature] = [:]
+
     static func analyzeImportedAudio(url: URL) throws -> CatAudioSnapshot {
         let fileValues = try url.resourceValues(forKeys: [.fileSizeKey, .localizedNameKey])
         let sourceLabel = fileValues.localizedName ?? "导入音频"
@@ -187,11 +189,17 @@ enum CatAudioAnalyzer {
     }
 
     private static func referenceSignature(for sample: CatAudioSample) -> CatAudioSignature {
+        if let cachedSignature = cachedReferenceSignatures[sample.id] {
+            return cachedSignature
+        }
+
         guard let url = sample.bundleURL,
               let snapshot = try? analyzeAudioFile(url: url, sourceLabel: sample.title) else {
+            cachedReferenceSignatures[sample.id] = sample.referenceSignature
             return sample.referenceSignature
         }
 
+        cachedReferenceSignatures[sample.id] = snapshot.signature
         return snapshot.signature
     }
 
