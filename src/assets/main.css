@@ -1,35 +1,73 @@
-@import './base.css';
+@import "tailwindcss";
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+@theme {
+  --color-cream-white: #FFFDF7;
+  --color-peach-pink: #FFB5B5;
+  --color-peach-pink-dark: #e8a0a0;
+  --color-oat-apricot: #F5D5C8;
+  --color-light-brown: #C4A882;
+  --color-sage-green: #B8C9A3;
+
+  --color-text-main: #4A4036;
+  --color-text-muted: #8C7C6D;
+  
+  --font-cute: "ZCOOL KuaiLe", "Nunito", sans-serif;
+  --font-body: "Noto Sans SC", "Nunito", sans-serif;
+
+  --shadow-soft: 0 10px 40px -10px rgba(196, 168, 130, 0.15);
+  --shadow-float: 0 20px 50px -15px rgba(255, 181, 181, 0.25);
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+body {
+  background-color: var(--color-cream-white);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+h1, h2, h3, h4, h5, h6, .font-cute {
+  font-family: var(--font-cute);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+a, button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float-delayed {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float-delayed {
+  animation: float-delayed 4.5s ease-in-out infinite 1s;
+}
+
+@keyframes float-reverse {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float-reverse {
+  animation: float-reverse 3.5s ease-in-out infinite 0.5s;
+}
+
+.bg-gradient-soft {
+  background: linear-gradient(135deg, var(--color-cream-white) 0%, var(--color-oat-apricot) 100%);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--color-peach-pink) 0%, var(--color-oat-apricot) 100%);
 }
