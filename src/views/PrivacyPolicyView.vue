@@ -87,7 +87,7 @@ import { RouterLink } from 'vue-router'
             如果您对本隐私政策有任何疑问、意见或建议，请随时通过以下方式与我们联系：
           </p>
           <p class="mt-2">
-            电子邮箱：<a href="mailto:contact@example.com" class="text-[var(--color-sage-green)] hover:underline">contact@example.com</a>
+            电子邮箱：<a href="mailto:xm@aoe.top" class="text-[var(--color-sage-green)] hover:underline">xm@aoe.top</a>
           </p>
         </section>
       </div>

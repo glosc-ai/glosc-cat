@@ -28,7 +28,7 @@ const toggleMenu = () => {
     <nav :class="['fixed w-full z-50 transition-all duration-300 backdrop-blur-md', isScrolled ? 'bg-white/80 shadow-sm py-4' : 'bg-transparent py-6']">
       <div class="max-w-7xl mx-auto px-6 lg:px-12 flex justify-between items-center">
         <a href="#" class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-[var(--color-peach-pink)] text-white flex items-center justify-center text-2xl shadow-[var(--shadow-soft)]">🐱</div>
+          <img src="/icon.png" alt="说猫语图标" class="w-10 h-10 rounded-full shadow-[var(--shadow-soft)] object-cover" />
           <span class="font-cute text-2xl tracking-wide text-[var(--color-text-main)]">说猫语</span>
         </a>
 
@@ -228,31 +228,14 @@ const toggleMenu = () => {
             </div>
           </div>
 
-          <!-- Decorative abstract UI mockup -->
+          <!-- App preview -->
           <div class="relative flex justify-center">
-            <div class="w-[300px] h-[600px] bg-[var(--color-cream-white)] rounded-[3rem] p-4 relative shadow-2xl border-8 border-white/10 rotate-2 hover:rotate-0 transition-transform duration-500">
-              <!-- Notch -->
-              <div class="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-white/10 rounded-b-2xl"></div>
-              
-              <!-- App Content Abstract -->
-              <div class="w-full h-full rounded-[2rem] bg-white overflow-hidden flex flex-col pt-12 p-6 shadow-inner">
-                <div class="flex justify-between items-center mb-8">
-                  <div class="w-10 h-10 rounded-full bg-[var(--color-oat-apricot)] animate-pulse"></div>
-                  <div class="w-8 h-8 rounded-full bg-[var(--color-cream-white)]"></div>
-                </div>
-
-                <div class="w-full h-40 rounded-[2rem] bg-gradient-primary mb-6 relative overflow-hidden flex items-center justify-center shadow-md">
-                  <span class="text-6xl animate-float">😸</span>
-                </div>
-
-                <div class="w-3/4 h-6 rounded-full bg-[var(--color-cream-white)] mb-4"></div>
-                <div class="w-1/2 h-4 rounded-full bg-[var(--color-cream-white)] mb-8"></div>
-
-                <div class="grid grid-cols-2 gap-4 mt-auto">
-                  <div class="h-16 rounded-2xl bg-[var(--color-peach-pink)]/20"></div>
-                  <div class="h-16 rounded-2xl bg-[var(--color-sage-green)]/20"></div>
-                </div>
-              </div>
+            <div class="w-[300px] max-w-full bg-[var(--color-cream-white)] rounded-[3rem] p-3 relative shadow-2xl border border-white/40 rotate-2 hover:rotate-0 transition-transform duration-500">
+              <img
+                src="/Home.png"
+                alt="说猫语应用界面预览"
+                class="block w-full h-auto rounded-[2.4rem] shadow-inner"
+              />
             </div>
           </div>
         </div>
@@ -282,7 +265,7 @@ const toggleMenu = () => {
     <footer class="bg-white pt-16 pb-8 px-6 border-t border-[var(--color-cream-white)]">
       <div class="max-w-7xl mx-auto flex flex-col items-center text-center">
         <div class="flex items-center gap-2 mb-6 text-[var(--color-text-main)] opacity-80">
-          <span class="text-2xl">🐱</span>
+          <img src="/icon.png" alt="说猫语图标" class="w-8 h-8 rounded-full object-cover" />
           <span class="font-cute text-xl">说猫语</span>
         </div>
         
@@ -292,13 +275,19 @@ const toggleMenu = () => {
 
         <div class="flex gap-6 mb-12">
           <RouterLink to="/privacy" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">隐私政策</RouterLink>
-          <a href="mailto:contact@example.com" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">联系我们</a>
+          <a href="mailto:xm@aoe.top" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">联系我们</a>
         </div>
 
         <div class="w-full h-px bg-[var(--color-cream-white)] mb-8"></div>
         
         <p class="text-[var(--color-text-muted)]/60 text-xs">
-          © 2025 说猫语. All rights reserved.
+          © 2026 Glosc AI. 保留所有权利。
+        </p>
+        <p class="text-[var(--color-text-muted)]/60 text-xs mt-1">
+          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="hover:text-[var(--color-text-muted)] transition-colors">沪ICP备2026003781号-1</a>
+        </p>
+        <p class="text-[var(--color-text-muted)]/60 text-xs mt-1">
+          <a href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=31011202022083" target="_blank" rel="noopener noreferrer" class="hover:text-[var(--color-text-muted)] transition-colors">沪公网安备31011202022083号</a>
         </p>
       </div>
     </footer>
