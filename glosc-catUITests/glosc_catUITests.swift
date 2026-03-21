@@ -23,12 +23,20 @@ final class glosc_catUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testMainFlowsAreVisible() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        XCTAssertTrue(app.staticTexts["说猫语"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["mode.catToHuman"].exists)
+        XCTAssertTrue(app.buttons["mode.humanToCat"].exists)
+        XCTAssertTrue(app.buttons["record.toggle"].exists)
+        XCTAssertTrue(app.staticTexts["内置猫叫样本"].exists)
+
+        app.buttons["mode.humanToCat"].tap()
+
+        XCTAssertTrue(app.buttons["generate.catPhrase"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.textFields["textInput.human"].exists || app.otherElements["textInput.human"].exists)
     }
 
     @MainActor

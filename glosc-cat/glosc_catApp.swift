@@ -12,7 +12,8 @@ import SwiftData
 struct glosc_catApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            InteractionRecord.self,
+            FavoritePhrase.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
