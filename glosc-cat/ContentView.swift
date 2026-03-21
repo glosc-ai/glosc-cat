@@ -16,6 +16,7 @@ struct ContentView: View {
 
     @StateObject private var recorder = CatAudioRecorder()
     @StateObject private var samplePlayer = CatSamplePlayer()
+    @StateObject private var speechTranscriber = HumanSpeechTranscriber()
 
     @State private var selectedMode: AppMode = .catToHuman
     @State private var latestInterpretation: CatInterpretation?
@@ -73,6 +74,9 @@ struct ContentView: View {
             allowsMultipleSelection: false,
             onCompletion: handleImportedAudio
         )
+        .onChange(of: speechTranscriber.transcript) { _, newValue in
+            humanText = newValue
+        }
     }
 
     private var heroSection: some View {
@@ -131,6 +135,9 @@ struct ContentView: View {
             ForEach(AppMode.allCases) { mode in
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
+                        if selectedMode != mode, speechTranscriber.isTranscribing {
+                            speechTranscriber.stop()
+                        }
                         selectedMode = mode
                         errorMessage = nil
                         statusMessage = mode.subtitle
@@ -172,7 +179,7 @@ struct ContentView: View {
 
     private var catToHumanPanel: some View {
         VStack(spacing: 18) {
-            SectionCard(title: "猫语转人话", subtitle: "录下来或导入音频，我会先给你一个温柔、可执行的判断。") {
+            SectionCard(title: "猫语转人话", subtitle: latestInterpretation == nil ? "录下来或导入音频，我会先给你一个温柔、可执行的判断。" : "操作和结果放在一起，听完后能直接看到这次更像在表达什么。") {
                 VStack(spacing: 18) {
                     ZStack {
                         Circle()
@@ -237,24 +244,74 @@ struct ContentView: View {
                         )
                         .disabled(isAnalyzingAudio)
                     }
+
+                    if isAnalyzingAudio {
+                        analysisInPlaceSection
+                            .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.96)), removal: .opacity))
+                    } else if let latestInterpretation {
+                        integratedResultSection(interpretation: latestInterpretation)
+                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.94)), removal: .opacity))
+                    }
                 }
             }
 
             sampleLibrarySection
-
-            if isAnalyzingAudio {
-                SectionCard(title: "正在理解它的语气", subtitle: "我在结合时长、响度和变化节奏，整理成你更容易理解的话。") {
-                    ProgressView()
-                        .progressViewStyle(.circular)
-                        .tint(AppPalette.coral)
-                        .padding(.vertical, 8)
-                }
-            }
-
-            if let latestInterpretation {
-                resultSection(interpretation: latestInterpretation)
-            }
         }
+    }
+
+    private var analysisInPlaceSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .center, spacing: 14) {
+                AnalysisPulseView()
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("正在替你听懂这段猫语")
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppPalette.ink)
+                    Text("我在先和本地真实样本做对比，再结合时长、响度和节奏，把它整理成更好理解的话。")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(AppPalette.ink.opacity(0.68))
+                        .lineSpacing(2)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [AppPalette.peach.opacity(0.22), AppPalette.white, AppPalette.cream.opacity(0.75)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(height: 78)
+                .overlay {
+                    VStack(spacing: 10) {
+                        HStack(spacing: 8) {
+                            ForEach(0..<5, id: \.self) { index in
+                                Capsule(style: .continuous)
+                                    .fill(index.isMultiple(of: 2) ? AppPalette.coral.opacity(0.8) : AppPalette.sage.opacity(0.75))
+                                    .frame(width: 8, height: CGFloat([18, 30, 22, 34, 16][index]))
+                            }
+                        }
+
+                        Text("分析完成后会直接在这里展开结果")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppPalette.ink.opacity(0.62))
+                    }
+                }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppPalette.white.opacity(0.82))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(AppPalette.peach.opacity(0.9), lineWidth: 1)
+        )
     }
 
     private var humanToCatPanel: some View {
@@ -266,20 +323,50 @@ struct ContentView: View {
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .foregroundStyle(AppPalette.ink.opacity(0.76))
 
-                        TextField("比如：来吃饭啦，不要怕，我在这儿", text: $humanText, axis: .vertical)
-                            .textFieldStyle(.plain)
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .fill(AppPalette.white)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                    .stroke(AppPalette.oat, lineWidth: 1)
-                            )
-                            .lineLimit(3, reservesSpace: true)
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
-                            .accessibilityIdentifier("textInput.human")
+                        VStack(alignment: .leading, spacing: 12) {
+                            TextField("比如：来吃饭啦，不要怕，我在这儿", text: $humanText, axis: .vertical)
+                                .textFieldStyle(.plain)
+                                .lineLimit(3, reservesSpace: true)
+                                .font(.system(size: 16, weight: .medium, design: .rounded))
+                                .accessibilityIdentifier("textInput.human")
+
+                            Button {
+                                toggleSpeechTranscription()
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: speechTranscriber.isTranscribing ? "waveform.circle.fill" : "mic.circle")
+                                        .font(.system(size: 20, weight: .semibold))
+
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(speechTranscriber.isTranscribing ? "结束说话并写进输入框" : "语音转文字")
+                                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                                        Text(speechTranscriber.isTranscribing ? "我在边听边写，你说完再点一次" : "不想打字时，直接说一句就好")
+                                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                                            .foregroundStyle(AppPalette.ink.opacity(0.66))
+                                    }
+
+                                    Spacer()
+                                }
+                                .foregroundStyle(AppPalette.ink)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .fill(speechTranscriber.isTranscribing ? AppPalette.peach.opacity(0.8) : AppPalette.oat.opacity(0.45))
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("speechToText.toggle")
+                        }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .fill(AppPalette.white)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                .stroke(AppPalette.oat, lineWidth: 1)
+                        )
                     }
 
                     VStack(alignment: .leading, spacing: 10) {
@@ -337,48 +424,96 @@ struct ContentView: View {
         }
     }
 
-    private func resultSection(interpretation: CatInterpretation) -> some View {
-        SectionCard(title: "这次更像是在说", subtitle: interpretation.sourceLabel) {
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    MetricCard(title: "情绪", value: interpretation.emotion, tint: AppPalette.coral)
+    private func integratedResultSection(interpretation: CatInterpretation) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("这次更像是在说")
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppPalette.ink.opacity(0.62))
+                    Text(interpretation.emotion)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppPalette.ink)
                         .accessibilityIdentifier("result.emotion")
-                    MetricCard(title: "需求", value: interpretation.need, tint: AppPalette.sage)
+                    Text(interpretation.sourceLabel)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(AppPalette.ink.opacity(0.58))
                 }
 
-                DetailCard(title: "为什么这样判断", text: interpretation.explanation)
-                DetailCard(title: "你现在可以怎么做", text: interpretation.suggestion)
+                Spacer(minLength: 0)
 
-                HStack(spacing: 12) {
-                    ShareLink(item: interpretation.shareText) {
-                        Label("分享结果", systemImage: "square.and.arrow.up")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(AppPalette.white)
-                            )
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        analyzeDemoClip()
-                    } label: {
-                        Label("再试一次", systemImage: "arrow.clockwise")
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .fill(AppPalette.peach.opacity(0.65))
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(AppPalette.ink)
+                VStack(alignment: .trailing, spacing: 8) {
+                    Text("主要需求")
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppPalette.ink.opacity(0.55))
+                    Text(interpretation.need)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppPalette.ink)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 9)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(AppPalette.sage.opacity(0.22))
+                        )
                 }
             }
+
+            InterpretationShowcase(interpretation: interpretation)
+            DetailCard(title: "这次怎么判断的", text: interpretation.analysisSummary)
+
+            if let matchedSample = interpretation.matchedSample {
+                DetailCard(
+                    title: "最接近的真实样本",
+                    text: "\(matchedSample.sampleTitle) · \(matchedSample.sampleIntent)。当前相似度约 \(Int((matchedSample.similarity * 100).rounded()))%。\(matchedSample.comparisonSummary)"
+                )
+            }
+
+            HStack(spacing: 12) {
+                ShareLink(item: interpretation.shareText) {
+                    Label("分享结果", systemImage: "square.and.arrow.up")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(AppPalette.white)
+                        )
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    analyzeDemoClip()
+                } label: {
+                    Label("再试一次", systemImage: "arrow.clockwise")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(AppPalette.peach.opacity(0.65))
+                        )
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(AppPalette.ink)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [AppPalette.white, AppPalette.card, AppPalette.peach.opacity(0.2)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(AppPalette.white.opacity(0.94), lineWidth: 1.2)
+        )
+        .shadow(color: AppPalette.shadow.opacity(0.7), radius: 14, x: 0, y: 10)
     }
 
     private func generatedPhraseSection(plan: CatPhrasePlan) -> some View {
@@ -436,7 +571,7 @@ struct ContentView: View {
     }
 
     private var sampleLibrarySection: some View {
-        SectionCard(title: "内置猫叫样本", subtitle: "你放进项目里的公开样本已经接进应用，可以直接试听，也可以一键走识别流程。") {
+        SectionCard(title: "内置猫叫样本", subtitle: "这些真实样本现在既能直接试听，也会作为本地语义对比库，帮助判断录音更像在表达什么。") {
             VStack(alignment: .leading, spacing: 14) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -669,15 +804,20 @@ struct ContentView: View {
 
     private func handleSnapshot(_ snapshot: CatAudioSnapshot) {
         errorMessage = nil
-        isAnalyzingAudio = true
+        withAnimation(.easeInOut(duration: 0.22)) {
+            latestInterpretation = nil
+            isAnalyzingAudio = true
+        }
         statusMessage = "我在整理它这次更像是在表达什么。"
 
         let interpretation = CatAudioAnalyzer.interpret(snapshot)
-        latestInterpretation = interpretation
         saveInterpretation(interpretation)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            isAnalyzingAudio = false
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.84)) {
+                latestInterpretation = interpretation
+                isAnalyzingAudio = false
+            }
             statusMessage = interpretation.confidenceNote
         }
     }
@@ -726,7 +866,32 @@ struct ContentView: View {
         playSample(sample)
     }
 
+    private func toggleSpeechTranscription() {
+        errorMessage = nil
+
+        if speechTranscriber.isTranscribing {
+            speechTranscriber.stop()
+            statusMessage = humanText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "这次还没有听到清晰的人话。" : "已经帮你写进输入框，可以直接生成猫语了。"
+            return
+        }
+
+        statusMessage = "开始听你说话了，我会直接写进输入框。"
+
+        Task {
+            do {
+                try await speechTranscriber.start()
+            } catch {
+                errorMessage = error.localizedDescription
+                statusMessage = "语音转文字这次没能顺利开始。"
+            }
+        }
+    }
+
     private func generatePhrase() {
+        if speechTranscriber.isTranscribing {
+            speechTranscriber.stop()
+        }
+
         let trimmed = humanText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmed.isEmpty else {
@@ -942,6 +1107,50 @@ private struct MetricCard: View {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(tint.opacity(0.16))
         )
+    }
+}
+
+private struct InterpretationShowcase: View {
+    let interpretation: CatInterpretation
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                MetricCard(title: "情绪", value: interpretation.emotion, tint: AppPalette.coral)
+                MetricCard(title: "需求", value: interpretation.need, tint: AppPalette.sage)
+            }
+
+            DetailCard(title: "为什么这样判断", text: interpretation.explanation)
+            DetailCard(title: "你现在可以怎么做", text: interpretation.suggestion)
+        }
+    }
+}
+
+private struct AnalysisPulseView: View {
+    @State private var isAnimating = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(AppPalette.peach.opacity(0.32))
+                .frame(width: 56, height: 56)
+                .scaleEffect(isAnimating ? 1.12 : 0.9)
+
+            Circle()
+                .stroke(AppPalette.coral.opacity(0.3), lineWidth: 1.4)
+                .frame(width: 70, height: 70)
+                .scaleEffect(isAnimating ? 1.18 : 0.95)
+                .opacity(isAnimating ? 0.15 : 0.45)
+
+            Image(systemName: "waveform.path.ecg")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(AppPalette.coral)
+        }
+        .onAppear {
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) {
+                isAnimating = true
+            }
+        }
     }
 }
 

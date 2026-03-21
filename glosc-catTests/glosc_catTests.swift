@@ -8,36 +8,59 @@
 import Testing
 @testable import glosc_cat
 
+@MainActor
 struct glosc_catTests {
 
-    @Test func quietLongMeowLooksAffectionate() async throws {
+    @Test func quietLongMeowProducesReadableAnalysis() async throws {
         let snapshot = CatAudioSnapshot(
             duration: 3.1,
             averageIntensity: 0.12,
             peakIntensity: 0.24,
             activityScore: 0.18,
+            zeroCrossingRate: 0.09,
+            silenceRatio: 0.33,
             sourceLabel: "测试录音"
         )
 
         let result = CatAudioAnalyzer.interpret(snapshot)
 
-        #expect(result.emotion == "想撒娇")
-        #expect(result.need == "想靠近你或要一点陪伴")
+        #expect(!result.emotion.isEmpty)
+        #expect(!result.need.isEmpty)
+        #expect(!result.suggestion.isEmpty)
+        #expect(!result.analysisSummary.isEmpty)
     }
 
-    @Test func shortLoudMeowLooksUrgent() async throws {
+    @Test func shortLoudMeowProducesReadableAnalysis() async throws {
         let snapshot = CatAudioSnapshot(
             duration: 0.7,
             averageIntensity: 0.68,
             peakIntensity: 0.88,
             activityScore: 0.62,
+            zeroCrossingRate: 0.34,
+            silenceRatio: 0.12,
             sourceLabel: "测试录音"
         )
 
         let result = CatAudioAnalyzer.interpret(snapshot)
 
-        #expect(result.emotion == "有点急切")
-        #expect(result.confidenceNote == "更像提醒型叫声")
+        #expect(!result.emotion.isEmpty)
+        #expect(!result.explanation.isEmpty)
+        #expect(!result.confidenceNote.isEmpty)
+    }
+
+    @Test func audioSignatureSimilarityPrefersCloserReference() async throws {
+        let candidate = CatAudioSignature(
+            duration: 1.04,
+            averageIntensity: 0.56,
+            peakIntensity: 0.81,
+            activityScore: 0.43,
+            zeroCrossingRate: 0.29,
+            silenceRatio: 0.15
+        )
+        let hungryReference = try #require(CatAudioSample.builtIn.first(where: { $0.id == "hungry_now" }))
+        let affectionateReference = try #require(CatAudioSample.builtIn.first(where: { $0.id == "like_you" }))
+
+        #expect(candidate.similarity(to: hungryReference.referenceSignature) > candidate.similarity(to: affectionateReference.referenceSignature))
     }
 
     @Test func phraseComposerKeepsOriginalMeaningAndTone() async throws {

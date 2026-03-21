@@ -36,6 +36,7 @@ final class glosc_catUITests: XCTestCase {
         app.buttons["mode.humanToCat"].tap()
 
         XCTAssertTrue(app.buttons["generate.catPhrase"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["speechToText.toggle"].exists)
         XCTAssertTrue(app.textFields["textInput.human"].exists || app.otherElements["textInput.human"].exists)
     }
 

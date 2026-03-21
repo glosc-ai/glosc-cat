@@ -73,7 +73,75 @@ struct CatAudioSnapshot: Equatable {
     let averageIntensity: Double
     let peakIntensity: Double
     let activityScore: Double
+    let zeroCrossingRate: Double
+    let silenceRatio: Double
     let sourceLabel: String
+
+    init(
+        duration: TimeInterval,
+        averageIntensity: Double,
+        peakIntensity: Double,
+        activityScore: Double,
+        zeroCrossingRate: Double = 0.2,
+        silenceRatio: Double = 0.2,
+        sourceLabel: String
+    ) {
+        self.duration = duration
+        self.averageIntensity = averageIntensity
+        self.peakIntensity = peakIntensity
+        self.activityScore = activityScore
+        self.zeroCrossingRate = zeroCrossingRate
+        self.silenceRatio = silenceRatio
+        self.sourceLabel = sourceLabel
+    }
+
+    var signature: CatAudioSignature {
+        CatAudioSignature(
+            duration: duration,
+            averageIntensity: averageIntensity,
+            peakIntensity: peakIntensity,
+            activityScore: activityScore,
+            zeroCrossingRate: zeroCrossingRate,
+            silenceRatio: silenceRatio
+        )
+    }
+}
+
+struct CatAudioSignature: Equatable {
+    let duration: TimeInterval
+    let averageIntensity: Double
+    let peakIntensity: Double
+    let activityScore: Double
+    let zeroCrossingRate: Double
+    let silenceRatio: Double
+
+    func similarity(to other: CatAudioSignature) -> Double {
+        let durationScale = max(max(duration, other.duration), 0.6)
+        let durationDistance = min(abs(duration - other.duration) / durationScale, 1)
+        let averageDistance = abs(averageIntensity - other.averageIntensity)
+        let peakDistance = abs(peakIntensity - other.peakIntensity)
+        let activityDistance = abs(activityScore - other.activityScore)
+        let zeroCrossingDistance = abs(zeroCrossingRate - other.zeroCrossingRate)
+        let silenceDistance = abs(silenceRatio - other.silenceRatio)
+
+        let weightedDistance =
+            (durationDistance * 0.2) +
+            (averageDistance * 0.18) +
+            (peakDistance * 0.18) +
+            (activityDistance * 0.18) +
+            (zeroCrossingDistance * 0.16) +
+            (silenceDistance * 0.1)
+
+        return max(0, 1 - weightedDistance)
+    }
+}
+
+struct CatSemanticMatch: Equatable {
+    let sampleID: String
+    let sampleTitle: String
+    let sampleIntent: String
+    let similarity: Double
+    let comparisonSummary: String
 }
 
 struct CatInterpretation: Equatable {
@@ -83,9 +151,14 @@ struct CatInterpretation: Equatable {
     let suggestion: String
     let confidenceNote: String
     let sourceLabel: String
+    let matchedSample: CatSemanticMatch?
+    let analysisSummary: String
 
     var shareText: String {
-        "说猫语帮我听到：\(emotion)｜\(need)。\(explanation) 建议：\(suggestion)"
+        let matchedText = matchedSample.map {
+            " 最接近的真实样本是“\($0.sampleTitle)”，相似度约\(Int(($0.similarity * 100).rounded()))%。"
+        } ?? ""
+        return "说猫语帮我听到：\(emotion)｜\(need)。\(explanation)\(matchedText) 建议：\(suggestion)"
     }
 }
 
