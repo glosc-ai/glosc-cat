@@ -37,6 +37,7 @@ const toggleMenu = () => {
           <a href="#features" class="font-medium text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)]">功能介绍</a>
           <a href="#how-it-works" class="font-medium text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)]">如何使用</a>
           <RouterLink to="/privacy" class="font-medium text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)]">隐私政策</RouterLink>
+          <RouterLink to="/support" class="font-medium text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)]">技术支持</RouterLink>
           <a href="#download" class="bg-[var(--color-text-main)] hover:bg-[var(--color-peach-pink)] text-white px-6 py-2.5 rounded-full font-medium transition-colors shadow-md">
             立即下载
           </a>
@@ -53,6 +54,7 @@ const toggleMenu = () => {
         <a href="#features" class="font-medium py-2 text-[var(--color-text-muted)]" @click="toggleMenu">功能介绍</a>
         <a href="#how-it-works" class="font-medium py-2 text-[var(--color-text-muted)]" @click="toggleMenu">如何使用</a>
         <RouterLink to="/privacy" class="font-medium py-2 text-[var(--color-text-muted)]" @click="toggleMenu">隐私政策</RouterLink>
+        <RouterLink to="/support" class="font-medium py-2 text-[var(--color-text-muted)]" @click="toggleMenu">技术支持</RouterLink>
         <a href="#download" class="bg-[var(--color-text-main)] text-white text-center px-6 py-3 rounded-2xl font-medium mt-2" @click="toggleMenu">
           立即下载
         </a>
@@ -275,6 +277,7 @@ const toggleMenu = () => {
 
         <div class="flex gap-6 mb-12">
           <RouterLink to="/privacy" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">隐私政策</RouterLink>
+          <RouterLink to="/support" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">技术支持</RouterLink>
           <a href="mailto:xm@aoe.top" class="text-[var(--color-text-muted)] hover:text-[var(--color-peach-pink)] text-sm transition-colors">联系我们</a>
         </div>
 
