@@ -12,6 +12,7 @@ final class glosc_catUITests: XCTestCase {
     private func makeApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments.append("UITestResetLanguageOverride")
+        app.launchArguments.append("DisableAppOpenAds")
         return app
     }
 

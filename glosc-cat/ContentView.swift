@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var languageStore: LanguageStore
+    @EnvironmentObject private var appOpenAdManager: AppOpenAdManager
     @Query(sort: \InteractionRecord.createdAt, order: .reverse) private var records: [InteractionRecord]
     @Query(sort: \FavoritePhrase.createdAt, order: .reverse) private var favoritePhrases: [FavoritePhrase]
 
@@ -32,6 +33,14 @@ struct ContentView: View {
                                 title: L10n.tr("banner.error.title"),
                                 message: errorMessage,
                                 accent: AppPalette.coral
+                            )
+                        }
+
+                        if let consentErrorMessage = appOpenAdManager.consentErrorMessage {
+                            MessageBanner(
+                                title: L10n.tr("privacy.banner.title"),
+                                message: consentErrorMessage,
+                                accent: AppPalette.oat
                             )
                         }
 
@@ -119,6 +128,19 @@ struct ContentView: View {
                                 Text(language.displayName)
                             }
                             .accessibilityIdentifier("language.selector.option.\(language.rawValue)")
+                        }
+
+                        if appOpenAdManager.isPrivacyOptionsRequired {
+                            Divider()
+
+                            Button {
+                                Task {
+                                    await appOpenAdManager.presentPrivacyOptionsForm()
+                                }
+                            } label: {
+                                Text(L10n.tr("privacy.options.button"))
+                            }
+                            .accessibilityIdentifier("privacy.options.button")
                         }
                     } label: {
                         HStack(spacing: 8) {
