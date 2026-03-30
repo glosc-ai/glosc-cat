@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct glosc_catApp: App {
+    @StateObject private var languageStore = LanguageStore()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             InteractionRecord.self,
@@ -24,9 +26,15 @@ struct glosc_catApp: App {
         }
     }()
 
+    init() {
+        AppLocalizationSupport.prepareForLaunch()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(languageStore)
+                .id(languageStore.currentLanguage.localeIdentifier)
         }
         .modelContainer(sharedModelContainer)
     }

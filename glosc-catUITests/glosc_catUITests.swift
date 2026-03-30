@@ -9,6 +9,12 @@ import XCTest
 
 final class glosc_catUITests: XCTestCase {
 
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments.append("UITestResetLanguageOverride")
+        return app
+    }
+
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
 
@@ -24,7 +30,7 @@ final class glosc_catUITests: XCTestCase {
 
     @MainActor
     func testMainFlowsAreVisible() throws {
-        let app = XCUIApplication()
+        let app = makeApp()
         app.launch()
 
         XCTAssertTrue(app.staticTexts["说猫语"].waitForExistence(timeout: 3))
@@ -41,10 +47,30 @@ final class glosc_catUITests: XCTestCase {
     }
 
     @MainActor
+    func testLanguageSelectorSwitchesHeroTitle() throws {
+        let app = makeApp()
+        app.launch()
+
+        let title = app.staticTexts["screen.title"]
+        XCTAssertTrue(title.waitForExistence(timeout: 3))
+        XCTAssertTrue(["说猫语", "Glosc Cat"].contains(title.label))
+
+        app.buttons["language.selector"].tap()
+        app.buttons["language.selector.option.zh-Hans"].tap()
+
+        XCTAssertEqual(title.label, "说猫语")
+
+        app.buttons["language.selector"].tap()
+        app.buttons["language.selector.option.en"].tap()
+
+        XCTAssertEqual(title.label, "Glosc Cat")
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
+            makeApp().launch()
         }
     }
 }

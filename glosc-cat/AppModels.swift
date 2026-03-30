@@ -17,18 +17,18 @@ enum AppMode: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .catToHuman:
-            return "猫语转人话"
+            return L10n.tr("app.mode.cat_to_human.title")
         case .humanToCat:
-            return "人话转猫语"
+            return L10n.tr("app.mode.human_to_cat.title")
         }
     }
 
     var subtitle: String {
         switch self {
         case .catToHuman:
-            return "录下来，看看它现在更像是在撒娇、求助，还是想互动。"
+            return L10n.tr("app.mode.cat_to_human.subtitle")
         case .humanToCat:
-            return "把你的话变成更贴近猫咪节奏的喵语，温柔一点地回应它。"
+            return L10n.tr("app.mode.human_to_cat.subtitle")
         }
     }
 }
@@ -44,26 +44,26 @@ enum CatTone: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .soothe:
-            return "安抚"
+            return L10n.tr("tone.soothe.title")
         case .call:
-            return "召唤"
+            return L10n.tr("tone.call.title")
         case .praise:
-            return "夸奖"
+            return L10n.tr("tone.praise.title")
         case .play:
-            return "陪玩"
+            return L10n.tr("tone.play.title")
         }
     }
 
     var subtitle: String {
         switch self {
         case .soothe:
-            return "轻一点，软一点"
+            return L10n.tr("tone.soothe.subtitle")
         case .call:
-            return "更明确地叫它"
+            return L10n.tr("tone.call.subtitle")
         case .praise:
-            return "像在夸它好乖"
+            return L10n.tr("tone.praise.subtitle")
         case .play:
-            return "更活泼地邀请互动"
+            return L10n.tr("tone.play.subtitle")
         }
     }
 }
@@ -156,9 +156,20 @@ struct CatInterpretation: Equatable {
 
     var shareText: String {
         let matchedText = matchedSample.map {
-            " 最接近的真实样本是“\($0.sampleTitle)”，相似度约\(Int(($0.similarity * 100).rounded()))%。"
+            L10n.format(
+                "share.interpretation.matched_sample",
+                $0.sampleTitle,
+                Int(($0.similarity * 100).rounded())
+            )
         } ?? ""
-        return "说猫语帮我听到：\(emotion)｜\(need)。\(explanation)\(matchedText) 建议：\(suggestion)"
+        return L10n.format(
+            "share.interpretation.full",
+            emotion,
+            need,
+            explanation,
+            matchedText,
+            suggestion
+        )
     }
 }
 
@@ -173,7 +184,13 @@ struct CatPhrasePlan: Equatable {
     let sampleIntent: String
 
     var shareText: String {
-        "我把“\(originalText)”翻成了猫语：\(catText)。这次匹配的是“\(sampleTitle)”猫叫样本，语气：\(tone.title)。"
+        L10n.format(
+            "share.phrase.full",
+            originalText,
+            catText,
+            sampleTitle,
+            tone.title
+        )
     }
 }
 

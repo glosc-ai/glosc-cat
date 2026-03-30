@@ -17,7 +17,7 @@ final class ContentViewModel: ObservableObject {
     @Published var isImportingAudio = false
     @Published var isAnalyzingAudio = false
     @Published var errorMessage: String?
-    @Published var statusMessage = "先选一个方向吧，我会把核心操作放在你手边。"
+    @Published var statusMessage = L10n.tr("status.idle")
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -44,14 +44,14 @@ final class ContentViewModel: ObservableObject {
             return
         }
 
-        statusMessage = "我在认真听它说话。"
+        statusMessage = L10n.tr("status.recording.listening")
 
         Task {
             do {
                 try await recorder.start()
             } catch {
                 errorMessage = error.localizedDescription
-                statusMessage = "这次没能开始录音。"
+                statusMessage = L10n.tr("status.recording.start_failed")
             }
         }
     }
@@ -62,7 +62,7 @@ final class ContentViewModel: ObservableObject {
             handleSnapshot(snapshot, modelContext: modelContext)
         } catch {
             errorMessage = error.localizedDescription
-            statusMessage = "录音结束时出了点小问题。"
+            statusMessage = L10n.tr("status.recording.stop_failed")
         }
     }
 
@@ -87,11 +87,11 @@ final class ContentViewModel: ObservableObject {
                 let snapshot = try CatAudioAnalyzer.analyzeImportedAudio(url: url)
                 handleSnapshot(snapshot, modelContext: modelContext)
             } catch {
-                errorMessage = "这段音频暂时没能顺利分析，你可以换一段更清晰的猫叫试试。"
-                statusMessage = "导入音频时遇到了一点问题。"
+                errorMessage = L10n.tr("error.import.analysis_failed")
+                statusMessage = L10n.tr("status.import.failed")
             }
         case .failure:
-            errorMessage = "没有选中音频文件，这次就先不分析啦。"
+            errorMessage = L10n.tr("error.import.no_file_selected")
         }
     }
 
@@ -101,7 +101,7 @@ final class ContentViewModel: ObservableObject {
             latestInterpretation = nil
             isAnalyzingAudio = true
         }
-        statusMessage = "我在整理它这次更像是在表达什么。"
+        statusMessage = L10n.tr("status.analysis.running")
 
         let interpretation = CatAudioAnalyzer.interpret(snapshot)
         saveInterpretation(interpretation, modelContext: modelContext)
@@ -119,16 +119,16 @@ final class ContentViewModel: ObservableObject {
         errorMessage = nil
         do {
             guard let url = sample.bundleURL else {
-                errorMessage = "没有找到这段内置样本，先检查它是不是已经打进 App 资源里了。"
-                statusMessage = "内置样本暂时不可用。"
+                errorMessage = L10n.tr("error.sample.missing_in_bundle")
+                statusMessage = L10n.tr("status.sample.unavailable")
                 return
             }
 
             let snapshot = try CatAudioAnalyzer.analyzeImportedAudio(url: url)
             handleSnapshot(snapshot, modelContext: modelContext)
         } catch {
-            errorMessage = "这段内置样本暂时没能顺利分析，你可以先换一段试听。"
-            statusMessage = "样本分析失败。"
+            errorMessage = L10n.tr("error.sample.analysis_failed")
+            statusMessage = L10n.tr("status.sample.analysis_failed")
         }
     }
 
@@ -140,17 +140,17 @@ final class ContentViewModel: ObservableObject {
                 samplePlayer.stop()
             } else {
                 samplePlayer.stop()
-                statusMessage = "已经停下这段猫叫啦。"
+                statusMessage = L10n.tr("status.sample.stopped")
                 return
             }
         }
 
         do {
             try samplePlayer.play(sample: sample)
-            statusMessage = "正在试听“\(sample.title)”样本。"
+            statusMessage = L10n.format("status.sample.previewing", sample.title)
         } catch {
             errorMessage = error.localizedDescription
-            statusMessage = "真实猫叫没能顺利播放。"
+            statusMessage = L10n.tr("status.sample.playback_failed")
         }
     }
 
@@ -164,18 +164,18 @@ final class ContentViewModel: ObservableObject {
 
         if speechTranscriber.isTranscribing {
             speechTranscriber.stop()
-            statusMessage = humanText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "这次还没有听到清晰的人话。" : "已经帮你写进输入框，可以直接生成猫语了。"
+            statusMessage = humanText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? L10n.tr("status.transcription.empty") : L10n.tr("status.transcription.completed")
             return
         }
 
-        statusMessage = "开始听你说话了，我会直接写进输入框。"
+        statusMessage = L10n.tr("status.transcription.listening")
 
         Task {
             do {
                 try await speechTranscriber.start()
             } catch {
                 errorMessage = error.localizedDescription
-                statusMessage = "语音转文字这次没能顺利开始。"
+                statusMessage = L10n.tr("status.transcription.start_failed")
             }
         }
     }
@@ -188,28 +188,28 @@ final class ContentViewModel: ObservableObject {
         let trimmed = humanText.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmed.isEmpty else {
-            errorMessage = "先输入一句你想对它说的话，我才能帮你翻成猫语。"
-            statusMessage = "还缺一句原话。"
+            errorMessage = L10n.tr("error.phrase.empty_input")
+            statusMessage = L10n.tr("status.phrase.missing_input")
             return
         }
 
         errorMessage = nil
         let plan = CatPhraseComposer.generate(text: trimmed, tone: selectedTone)
         generatedPhrase = plan
-        statusMessage = "已经替你匹配好对应的真实猫叫，现在直接播放。"
+        statusMessage = L10n.tr("status.phrase.generated")
         savePhrase(plan, modelContext: modelContext)
         playMatchedSample(for: plan)
     }
 
     func playMatchedSample(for plan: CatPhrasePlan) {
         guard let sample = CatAudioSample.builtIn.first(where: { $0.id == plan.sampleID }) else {
-            errorMessage = "这句猫语还没找到可播放的真实样本。"
-            statusMessage = "对应样本暂时不可用。"
+            errorMessage = L10n.tr("error.phrase.sample_missing")
+            statusMessage = L10n.tr("status.phrase.sample_unavailable")
             return
         }
 
         playSample(sample, restartIfSame: true)
-        statusMessage = "正在播放“\(plan.sampleTitle)”这段真实猫叫。"
+        statusMessage = L10n.format("status.phrase.playing_sample", plan.sampleTitle)
     }
 
     private func saveInterpretation(_ interpretation: CatInterpretation, modelContext: ModelContext) {
@@ -217,7 +217,7 @@ final class ContentViewModel: ObservableObject {
             modeRaw: AppMode.catToHuman.rawValue,
             title: interpretation.emotion,
             summary: "\(interpretation.need) · \(interpretation.confidenceNote)",
-            detail: "\(interpretation.explanation) 建议：\(interpretation.suggestion)",
+            detail: L10n.format("record.interpretation.detail", interpretation.explanation, interpretation.suggestion),
             accent: interpretation.emotion
         )
         modelContext.insert(record)
@@ -227,7 +227,7 @@ final class ContentViewModel: ObservableObject {
         let record = InteractionRecord(
             modeRaw: AppMode.humanToCat.rawValue,
             title: plan.catText,
-            summary: "语气：\(plan.tone.title)",
+            summary: L10n.format("record.phrase.summary", plan.tone.title),
             detail: plan.explanation,
             accent: plan.tone.title
         )
@@ -245,7 +245,7 @@ final class ContentViewModel: ObservableObject {
             $0.originalText == plan.originalText && $0.toneRaw == plan.tone.rawValue
         }) {
             modelContext.delete(existing)
-            statusMessage = "已经帮你从收藏里拿出来了。"
+            statusMessage = L10n.tr("status.favorite.removed")
             return
         }
 
@@ -255,6 +255,6 @@ final class ContentViewModel: ObservableObject {
             catText: plan.catText
         )
         modelContext.insert(favorite)
-        statusMessage = "这句已经收进常用短语了。"
+        statusMessage = L10n.tr("status.favorite.added")
     }
 }

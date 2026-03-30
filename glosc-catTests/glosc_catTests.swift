@@ -5,11 +5,15 @@
 //  Created by XiaoM on 2026/3/21.
 //
 
+import Foundation
 import Testing
 @testable import glosc_cat
 
 @MainActor
+@Suite(.serialized)
 struct glosc_catTests {
+
+    private let languageOverrideKey = "app.language.override"
 
     @Test func quietLongMeowProducesReadableAnalysis() async throws {
         let snapshot = CatAudioSnapshot(
@@ -68,10 +72,11 @@ struct glosc_catTests {
 
         #expect(plan.originalText == "来吃饭啦，不要挑食")
         #expect(plan.tone == .call)
-        #expect(plan.catText.contains("喵"))
-        #expect(plan.explanation.contains("温柔地叫它过来"))
-        #expect(plan.sampleTitle == "来吃饭啦")
-        #expect(plan.sampleIntent == "开饭提醒")
+        #expect(!plan.catText.isEmpty)
+        #expect(!plan.explanation.isEmpty)
+        #expect(plan.sampleID == "meal_time")
+        #expect(!plan.sampleTitle.isEmpty)
+        #expect(!plan.sampleIntent.isEmpty)
     }
 
     @Test func builtInSamplesCoverTonePreview() async throws {
@@ -91,5 +96,37 @@ struct glosc_catTests {
 
         #expect(playSample.id == "play_together")
         #expect(foodSample.id == "meal_time")
+    }
+
+    @Test func languageOverrideChangesLocalizedHeroTitle() async throws {
+        UserDefaults.standard.removeObject(forKey: languageOverrideKey)
+        defer { UserDefaults.standard.removeObject(forKey: languageOverrideKey) }
+
+        AppLocalizationSupport.setOverrideLanguage(.english)
+
+        #expect(AppLocalizationSupport.overrideLanguage == .english)
+        #expect(L10n.tr("hero.title") == "Glosc Cat")
+    }
+
+    @Test func clearingLanguageOverrideReturnsToFollowSystem() async throws {
+        UserDefaults.standard.removeObject(forKey: languageOverrideKey)
+        defer { UserDefaults.standard.removeObject(forKey: languageOverrideKey) }
+
+        AppLocalizationSupport.setOverrideLanguage(.simplifiedChinese)
+        #expect(AppLocalizationSupport.overrideLanguage == .simplifiedChinese)
+
+        AppLocalizationSupport.setOverrideLanguage(nil)
+
+        #expect(AppLocalizationSupport.overrideLanguage == nil)
+        #expect(AppLocalizationSupport.isFollowingSystem)
+    }
+
+    @Test func chineseOverrideKeepsChineseHeroTitle() async throws {
+        UserDefaults.standard.removeObject(forKey: languageOverrideKey)
+        defer { UserDefaults.standard.removeObject(forKey: languageOverrideKey) }
+
+        AppLocalizationSupport.setOverrideLanguage(.simplifiedChinese)
+
+        #expect(L10n.tr("hero.title") == "说猫语")
     }
 }

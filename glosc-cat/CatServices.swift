@@ -15,7 +15,7 @@ enum CatAudioAnalyzer {
 
     static func analyzeImportedAudio(url: URL) throws -> CatAudioSnapshot {
         let fileValues = try url.resourceValues(forKeys: [.fileSizeKey, .localizedNameKey])
-        let sourceLabel = fileValues.localizedName ?? "导入音频"
+        let sourceLabel = fileValues.localizedName ?? L10n.tr("audio.imported.label")
 
         do {
             return try analyzeAudioFile(url: url, sourceLabel: sourceLabel)
@@ -59,12 +59,18 @@ enum CatAudioAnalyzer {
             return CatInterpretation(
                 emotion: sample.semanticEmotion,
                 need: sample.semanticNeed,
-                explanation: "这段录音和内置真实样本“\(sample.title)”最接近，相似度约 \(similarityText)%。\(bestMatch.comparisonSummary) \(sample.semanticExplanation)",
+                explanation: L10n.format(
+                    "analysis.match.explanation",
+                    sample.title,
+                    similarityText,
+                    bestMatch.comparisonSummary,
+                    sample.semanticExplanation
+                ),
                 suggestion: sample.semanticSuggestion,
                 confidenceNote: confidenceNote(for: bestMatch.similarity),
                 sourceLabel: snapshot.sourceLabel,
                 matchedSample: bestMatch,
-                analysisSummary: "这次先把录音和本地真实猫叫样本逐个做了比对，再结合时长、响度、停顿和节奏变化整理成语义解释。"
+                analysisSummary: L10n.tr("analysis.match.summary")
             )
         }
 
@@ -102,18 +108,18 @@ enum CatAudioAnalyzer {
         let analysisSummary: String
 
         if let bestMatch {
-            analysisSummary = "这段录音和“\(bestMatch.sampleTitle)”有一定相似度，但还不够高，所以这次主要按录音本身的时长、响度和节奏做推断。"
+            analysisSummary = L10n.format("analysis.heuristic.partial_match.summary", bestMatch.sampleTitle)
         } else {
-            analysisSummary = "这次没有找到足够接近的本地样本，结果主要来自录音本身的时长、响度和节奏变化。"
+            analysisSummary = L10n.tr("analysis.heuristic.no_match.summary")
         }
 
         if duration < 0.9 && peak > 0.72 {
             return CatInterpretation(
-                emotion: "有点急切",
-                need: "想马上得到回应",
-                explanation: "这段叫声偏短，但峰值比较高，像是在快速提醒你留意它，通常会出现在等吃饭、被门挡住，或想立刻获得关注的时候。",
-                suggestion: "先看看它是不是在饭盆、门口或你常放玩具的位置附近，再用轻声回应它。",
-                confidenceNote: "本地样本相似度一般，这次更像提醒型叫声",
+                emotion: L10n.tr("heuristic.urgent.emotion"),
+                need: L10n.tr("heuristic.urgent.need"),
+                explanation: L10n.tr("heuristic.urgent.explanation"),
+                suggestion: L10n.tr("heuristic.urgent.suggestion"),
+                confidenceNote: L10n.tr("heuristic.urgent.confidence"),
                 sourceLabel: snapshot.sourceLabel,
                 matchedSample: nil,
                 analysisSummary: analysisSummary
@@ -122,11 +128,11 @@ enum CatAudioAnalyzer {
 
         if duration > 2.5 && intensity < 0.2 {
             return CatInterpretation(
-                emotion: "想撒娇",
-                need: "想靠近你或要一点陪伴",
-                explanation: "这段声音拖得更长、整体力度也比较轻，比较像放松状态下的黏人表达，不太像紧张或抗拒。",
-                suggestion: "可以蹲下来跟它说话，或者轻轻摸摸下巴，看看它会不会继续靠近。",
-                confidenceNote: "本地样本相似度一般，这次更像亲近型叫声",
+                emotion: L10n.tr("heuristic.affectionate.emotion"),
+                need: L10n.tr("heuristic.affectionate.need"),
+                explanation: L10n.tr("heuristic.affectionate.explanation"),
+                suggestion: L10n.tr("heuristic.affectionate.suggestion"),
+                confidenceNote: L10n.tr("heuristic.affectionate.confidence"),
                 sourceLabel: snapshot.sourceLabel,
                 matchedSample: nil,
                 analysisSummary: analysisSummary
@@ -135,11 +141,11 @@ enum CatAudioAnalyzer {
 
         if activity > 0.62 && peak > 0.58 {
             return CatInterpretation(
-                emotion: "有点不安",
-                need: "想确认环境是不是安全",
-                explanation: "声音变化比较快，起伏也明显，说明它当下对周围环境更敏感，可能是在确认声音来源、陌生人，或者新出现的气味。",
-                suggestion: "先帮它把环境安静下来，再观察耳朵和尾巴姿态，避免一下子离它太近。",
-                confidenceNote: "本地样本相似度一般，这次更像环境刺激触发",
+                emotion: L10n.tr("heuristic.uneasy.emotion"),
+                need: L10n.tr("heuristic.uneasy.need"),
+                explanation: L10n.tr("heuristic.uneasy.explanation"),
+                suggestion: L10n.tr("heuristic.uneasy.suggestion"),
+                confidenceNote: L10n.tr("heuristic.uneasy.confidence"),
                 sourceLabel: snapshot.sourceLabel,
                 matchedSample: nil,
                 analysisSummary: analysisSummary
@@ -148,11 +154,11 @@ enum CatAudioAnalyzer {
 
         if intensity > 0.42 && duration > 1.1 {
             return CatInterpretation(
-                emotion: "想互动",
-                need: "希望你看看它或陪它玩一会儿",
-                explanation: "这段叫声时长和响度都比较均衡，像是在稳定地向你发起互动，不像单纯抱怨，也不像特别紧张。",
-                suggestion: "可以先看它是不是把你往玩具、窗边或者常待的位置带，再顺着它的节奏回应。",
-                confidenceNote: "本地样本相似度一般，这次更像邀请型叫声",
+                emotion: L10n.tr("heuristic.inviting.emotion"),
+                need: L10n.tr("heuristic.inviting.need"),
+                explanation: L10n.tr("heuristic.inviting.explanation"),
+                suggestion: L10n.tr("heuristic.inviting.suggestion"),
+                confidenceNote: L10n.tr("heuristic.inviting.confidence"),
                 sourceLabel: snapshot.sourceLabel,
                 matchedSample: nil,
                 analysisSummary: analysisSummary
@@ -160,11 +166,11 @@ enum CatAudioAnalyzer {
         }
 
         return CatInterpretation(
-            emotion: "在轻声试探",
-            need: "想确认你有没有在听它",
-            explanation: "整体音量不高，节奏也不算急，通常更像一段日常的小提醒，可能只是想让你看它一眼，或者确认你会不会回应。",
-            suggestion: "先叫叫它的名字，慢一点回应它，再看它会不会继续靠近或带你去某个位置。",
-            confidenceNote: "本地样本相似度一般，这次更像日常沟通型叫声",
+            emotion: L10n.tr("heuristic.gentle.emotion"),
+            need: L10n.tr("heuristic.gentle.need"),
+            explanation: L10n.tr("heuristic.gentle.explanation"),
+            suggestion: L10n.tr("heuristic.gentle.suggestion"),
+            confidenceNote: L10n.tr("heuristic.gentle.confidence"),
             sourceLabel: snapshot.sourceLabel,
             matchedSample: nil,
             analysisSummary: analysisSummary
@@ -303,26 +309,26 @@ enum CatAudioAnalyzer {
 
     private static func comparisonSummary(for lhs: CatAudioSignature, against rhs: CatAudioSignature, sampleTitle: String) -> String {
         let dimensions: [(String, Double)] = [
-            ("时长", min(abs(lhs.duration - rhs.duration) / max(max(lhs.duration, rhs.duration), 0.6), 1)),
-            ("平均响度", abs(lhs.averageIntensity - rhs.averageIntensity)),
-            ("峰值强度", abs(lhs.peakIntensity - rhs.peakIntensity)),
-            ("节奏起伏", abs(lhs.activityScore - rhs.activityScore)),
-            ("高频摩擦感", abs(lhs.zeroCrossingRate - rhs.zeroCrossingRate)),
-            ("停顿比例", abs(lhs.silenceRatio - rhs.silenceRatio))
+            (L10n.tr("analysis.dimension.duration"), min(abs(lhs.duration - rhs.duration) / max(max(lhs.duration, rhs.duration), 0.6), 1)),
+            (L10n.tr("analysis.dimension.average_intensity"), abs(lhs.averageIntensity - rhs.averageIntensity)),
+            (L10n.tr("analysis.dimension.peak_intensity"), abs(lhs.peakIntensity - rhs.peakIntensity)),
+            (L10n.tr("analysis.dimension.rhythm"), abs(lhs.activityScore - rhs.activityScore)),
+            (L10n.tr("analysis.dimension.texture"), abs(lhs.zeroCrossingRate - rhs.zeroCrossingRate)),
+            (L10n.tr("analysis.dimension.pause_ratio"), abs(lhs.silenceRatio - rhs.silenceRatio))
         ]
         let bestDimensions = dimensions.sorted { $0.1 < $1.1 }.prefix(2).map(\.0)
-        let dimensionText = bestDimensions.joined(separator: "、")
-        return "在\(dimensionText)上都更接近“\(sampleTitle)”这段样本。"
+        let dimensionText = bestDimensions.joined(separator: L10n.tr("analysis.dimension.separator"))
+        return L10n.format("analysis.comparison.summary", dimensionText, sampleTitle)
     }
 
     private static func confidenceNote(for similarity: Double) -> String {
         switch similarity {
         case 0.82...:
-            return "和本地真实样本非常接近"
+            return L10n.tr("analysis.confidence.high")
         case 0.7..<0.82:
-            return "和本地真实样本比较接近"
+            return L10n.tr("analysis.confidence.medium")
         default:
-            return "和本地真实样本有一定相似度"
+            return L10n.tr("analysis.confidence.low")
         }
     }
 
@@ -345,9 +351,9 @@ enum CatAudioAnalyzer {
         var errorDescription: String? {
             switch self {
             case .emptyAudio:
-                return "音频内容太短了，这次还不够分析。"
+                return L10n.tr("error.audio.too_short")
             case .bufferCreationFailed, .converterCreationFailed, .conversionFailed, .channelDataMissing:
-                return "这段音频暂时没能顺利转成可分析的数据。"
+                return L10n.tr("error.audio.conversion_failed")
             }
         }
     }
@@ -365,17 +371,17 @@ enum CatPhraseComposer {
 
         switch tone {
         case .soothe:
-            units = ["咪呜", "呼噜", "喵呜"]
-            explanation = "这句会更偏绵软、收尾更轻，适合在安抚、陪睡或它有点紧张的时候播放。"
+            units = [L10n.tr("catphrase.soothe.unit1"), L10n.tr("catphrase.soothe.unit2"), L10n.tr("catphrase.soothe.unit3")]
+            explanation = L10n.tr("catphrase.soothe.explanation")
         case .call:
-            units = ["喵", "喵呀", "咪"]
-            explanation = "这句节奏会更清楚，像在温柔地叫它过来，适合吃饭、回家或提醒它看向你。"
+            units = [L10n.tr("catphrase.call.unit1"), L10n.tr("catphrase.call.unit2"), L10n.tr("catphrase.call.unit3")]
+            explanation = L10n.tr("catphrase.call.explanation")
         case .praise:
-            units = ["咪呀", "喵呜", "嗯喵"]
-            explanation = "这句起伏更圆润，像在夸它好乖、好棒，适合奖励和贴贴时使用。"
+            units = [L10n.tr("catphrase.praise.unit1"), L10n.tr("catphrase.praise.unit2"), L10n.tr("catphrase.praise.unit3")]
+            explanation = L10n.tr("catphrase.praise.explanation")
         case .play:
-            units = ["喵嗷", "啾咪", "喵"]
-            explanation = "这句会更灵动一点，适合逗猫棒、追逐游戏或想把气氛带热的时候使用。"
+            units = [L10n.tr("catphrase.play.unit1"), L10n.tr("catphrase.play.unit2"), L10n.tr("catphrase.play.unit3")]
+            explanation = L10n.tr("catphrase.play.explanation")
         }
 
         let catText = (0..<count).map { units[$0 % units.count] }.joined(separator: " ")
@@ -385,7 +391,7 @@ enum CatPhraseComposer {
             originalText: shortened,
             tone: tone,
             catText: catText,
-            explanation: explanation + " 我已经把它对应到“\(matchedSample.title)”这段真实猫叫，播放时会优先用这段样本。",
+            explanation: L10n.format("catphrase.plan.explanation", explanation, matchedSample.title),
             playbackText: playbackText,
             sampleID: matchedSample.id,
             sampleTitle: matchedSample.title,
@@ -453,7 +459,7 @@ final class CatAudioRecorder: NSObject, ObservableObject {
             url: recorder.url,
             fallbackDuration: duration,
             meterSamples: meterSamples,
-            sourceLabel: "刚才这段录音"
+            sourceLabel: L10n.tr("audio.recorded.label")
         )
 
         self.recorder = nil
@@ -518,11 +524,11 @@ final class CatAudioRecorder: NSObject, ObservableObject {
         var errorDescription: String? {
             switch self {
             case .permissionDenied:
-                return "需要先打开麦克风权限，才能帮你听懂它现在在说什么。"
+                return L10n.tr("error.recorder.permission_denied")
             case .startFailed:
-                return "录音没能顺利开始，你可以稍后再试一次。"
+                return L10n.tr("error.recorder.start_failed")
             case .noActiveRecording:
-                return "现在还没有正在进行的录音。"
+                return L10n.tr("error.recorder.no_active_recording")
             }
         }
     }
@@ -534,7 +540,9 @@ final class HumanSpeechTranscriber: NSObject, ObservableObject {
     @Published private(set) var transcript = ""
 
     private let audioEngine = AVAudioEngine()
-    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh_CN"))
+    private var recognizer: SFSpeechRecognizer? {
+        SFSpeechRecognizer(locale: AppLocalizationSupport.speechLocale)
+    }
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
 
@@ -663,13 +671,13 @@ final class HumanSpeechTranscriber: NSObject, ObservableObject {
         var errorDescription: String? {
             switch self {
             case .notSupported:
-                return "这台设备暂时不支持语音转文字。"
+                return L10n.tr("error.transcriber.not_supported")
             case .temporarilyUnavailable:
-                return "语音识别现在不可用，你可以稍后再试。"
+                return L10n.tr("error.transcriber.temporarily_unavailable")
             case .speechPermissionDenied:
-                return "需要先打开语音识别权限，我才能帮你把人话写成文字。"
+                return L10n.tr("error.transcriber.speech_permission_denied")
             case .microphonePermissionDenied:
-                return "需要先打开麦克风权限，我才能听清你刚才说的话。"
+                return L10n.tr("error.transcriber.microphone_permission_denied")
             }
         }
     }
@@ -692,7 +700,7 @@ final class CatSpeechPlayer: NSObject, ObservableObject {
         }
 
         let utterance = AVSpeechUtterance(string: plan.playbackText)
-        utterance.voice = AVSpeechSynthesisVoice(language: "zh-CN")
+        utterance.voice = AVSpeechSynthesisVoice(language: AppLocalizationSupport.speechVoiceLanguageCode)
         utterance.volume = 0.95
 
         switch plan.tone {
@@ -773,9 +781,9 @@ final class CatSamplePlayer: NSObject, ObservableObject, AVAudioPlayerDelegate {
         var errorDescription: String? {
             switch self {
             case .resourceMissing(let fileName):
-                return "没有找到内置样本 \(fileName)，可以检查资源是不是已经加入应用目标。"
+                return L10n.format("error.sample.resource_missing", fileName)
             case .playbackFailed:
-                return "这段猫叫没能顺利播放，你可以换一个样本再试。"
+                return L10n.tr("error.sample.playback_failed")
             }
         }
     }
